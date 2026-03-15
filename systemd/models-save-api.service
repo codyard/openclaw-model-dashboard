@@ -1,0 +1,12 @@
+[Unit]
+Description=Models Manager Save API
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/node /home/shrek/.openclaw/workspace/scripts/models-save-api.mjs
+Restart=always
+RestartSec=5
+Environment=HOME=/home/shrek
+
+[Install]
+WantedBy=default.target

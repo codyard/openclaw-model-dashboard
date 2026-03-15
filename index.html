@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Models Manager · OpenClaw</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-0: #081321; --bg-1: #0e1f35; --bg-2: #1f2f4a;
+      --text: #eff7ff; --muted: #9eb6d1;
+      --card: rgba(10,23,39,.65); --border: rgba(176,216,255,.18);
+      --shadow: 0 24px 60px rgba(0,0,0,.35);
+      --accent-a: #5dd3ff; --accent-b: #4be3a6;
+      --ok: #4be3a6; --err: #ff6b6b; --warn: #ffa94d; --mute-c: #6b8cae;
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Manrope","Segoe UI",sans-serif;
+      color: var(--text); min-height: 100vh;
+      background:
+        radial-gradient(800px 480px at 6% 8%,rgba(93,211,255,.22),transparent 70%),
+        radial-gradient(680px 500px at 92% 4%,rgba(75,227,166,.17),transparent 74%),
+        linear-gradient(145deg,var(--bg-0),var(--bg-1) 45%,var(--bg-2));
+    }
+    .layout { width: min(1280px,100%); margin: 0 auto; padding: 32px 20px 56px; }
+
+    /* Header */
+    .hero {
+      border: 1px solid rgba(211,236,255,.18);
+      background: linear-gradient(130deg,rgba(15,30,52,.88),rgba(8,18,31,.7));
+      box-shadow: var(--shadow); border-radius: 24px; padding: 22px 26px;
+      backdrop-filter: blur(10px); margin-bottom: 20px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    }
+    .hero h1 { margin:0; font-family:"Space Grotesk",sans-serif; font-size:clamp(22px,3vw,36px); letter-spacing:-.03em; }
+    .hero-sub { margin:5px 0 0; color:var(--muted); font-size:13px; }
+    .hero-right { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .btn {
+      padding: 8px 16px; border-radius: 999px;
+      border: 1px solid var(--accent-a); background: rgba(93,211,255,.12);
+      color: var(--accent-a); cursor: pointer; font-size:13px; font-weight:700;
+      transition: all 150ms; text-decoration:none; display:inline-block;
+    }
+    .btn:hover { background: rgba(93,211,255,.25); }
+    .btn-sec { border-color:var(--muted); background:rgba(158,182,209,.08); color:var(--muted); }
+    .btn-sec:hover { background:rgba(158,182,209,.18); }
+
+    /* Stats */
+    .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(148px,1fr)); gap:12px; margin-bottom:20px; }
+    .stat-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:16px 18px; backdrop-filter:blur(6px); }
+    .stat-card .lbl { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px; }
+    .stat-card .val { font-family:"Space Grotesk",sans-serif; font-size:26px; font-weight:700; line-height:1; }
+    .stat-card .sub { font-size:11px; color:var(--muted); margin-top:4px; }
+    .c-ok{color:var(--ok);} .c-err{color:var(--err);} .c-a{color:var(--accent-a);}
+
+    /* Range tabs */
+    .range-tabs { display:flex; gap:8px; margin-bottom:16px; }
+    .tab { padding:7px 16px; border-radius:999px; border:1px solid var(--border); background:var(--card); color:var(--muted); cursor:pointer; font-size:13px; font-weight:700; transition:all 150ms; }
+    .tab.active { border-color:var(--accent-a); background:rgba(93,211,255,.15); color:var(--accent-a); }
+
+    /* Section */
+    .section { margin-bottom:20px; }
+    .sec-hdr { display:flex; align-items:center; gap:10px; margin-bottom:10px; cursor:pointer; user-select:none; }
+    .sec-hdr h2 { margin:0; font-family:"Space Grotesk",sans-serif; font-size:17px; font-weight:700; }
+    .sec-toggle { margin-left:auto; color:var(--muted); font-size:16px; transition:transform 200ms; }
+    .sec-toggle.col { transform:rotate(-90deg); }
+    .sec-body { border:1px solid var(--border); border-radius:var(--radius); background:var(--card); backdrop-filter:blur(6px); overflow:hidden; }
+
+    /* Chart */
+    .chart-inner { padding:14px 16px; }
+    .chart-row { display:flex; align-items:center; gap:12px; margin:7px 0; }
+    .chart-label { min-width:160px; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .chart-bar { flex:1; height:20px; background:rgba(176,216,255,.1); border-radius:4px; overflow:hidden; }
+    .chart-fill { height:100%; background:linear-gradient(90deg,var(--accent-a),var(--accent-b)); border-radius:4px; min-width:3px; transition:width 400ms ease; }
+    .chart-val { min-width:160px; text-align:right; font-size:12px; color:var(--muted); }
+
+    /* Catalog filters */
+    .cat-filters { display:flex; align-items:center; gap:8px; padding:10px 14px 0; flex-wrap:wrap; }
+    .cat-search { flex:1; min-width:140px; max-width:260px; padding:6px 10px; border-radius:8px; border:1px solid var(--border); background:rgba(14,31,52,.7); color:var(--text); font-size:12px; outline:none; }
+    .cat-search:focus { border-color:var(--accent-a); }
+    .cat-search::placeholder { color:var(--mute-c); }
+    .ftag { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:999px; border:1px solid var(--border); background:transparent; color:var(--muted); font-size:11px; font-weight:700; cursor:pointer; transition:all 150ms; white-space:nowrap; }
+    .ftag:hover { border-color:var(--accent-a); color:var(--accent-a); }
+    .ftag.on { border-color:var(--accent-a); background:rgba(93,211,255,.15); color:var(--accent-a); }
+    .ftag.on-g { border-color:var(--ok); background:rgba(75,227,166,.12); color:var(--ok); }
+    #fError.on { border-color:var(--err); background:rgba(255,107,107,.15); color:var(--err); }
+    .cat-count { margin-left:auto; font-size:11px; color:var(--mute-c); white-space:nowrap; }
+    /* Catalog grid */
+    /* Page-wide zoom per size level */
+    body[data-size="md"] { zoom: 1.2; }
+    body[data-size="lg"] { zoom: 1.4; }
+    .cat-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:12px; padding:14px; }
+    .prov-card { border:1px solid var(--border); border-radius:14px; background:rgba(8,19,33,.5); padding:14px 16px; transition:border-color 150ms; }
+    .prov-card:hover { border-color:rgba(93,211,255,.4); }
+    .prov-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+    .prov-name { font-family:"Space Grotesk",sans-serif; font-size:15px; font-weight:700; }
+    .prov-meta { font-size:11px; color:var(--muted); margin-bottom:8px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .mdl-list { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:4px; }
+    .mdl-item { display:flex; flex-direction:column; font-size:12px; padding:5px 8px; border-radius:8px; background:rgba(14,31,52,.5); position:relative; }
+    .mdl-ok-dot { position:absolute; bottom:5px; right:6px; width:7px; height:7px; border-radius:50%; background:var(--ok); box-shadow:0 0 5px var(--ok); flex-shrink:0; }
+    .mdl-item.is-primary { border:1px solid var(--accent-a); background:rgba(93,211,255,.07); }
+    .mdl-set-primary { display:none; position:absolute; top:4px; right:6px; padding:1px 6px; border-radius:4px; border:1px solid var(--accent-a); background:#0e2a45; color:var(--accent-a); font-size:10px; font-weight:700; cursor:pointer; white-space:nowrap; }
+    .mdl-item:hover .mdl-set-primary { display:block; }
+    .mdl-item.is-primary .mdl-set-primary { display:block; background:#0e3028; color:var(--ok); border-color:var(--ok); cursor:default; }
+    .tag-primary { background:rgba(93,211,255,.2); color:var(--accent-a); font-weight:700; }
+    .mdl-item-top { display:flex; align-items:center; gap:6px; }
+    .mdl-id { font-family:monospace; font-size:11px; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .mdl-tags { display:flex; gap:3px; flex-shrink:0; flex-wrap:wrap; }
+    .mdl-last-call { display:flex; align-items:center; gap:4px; margin-top:4px; padding-top:4px; border-top:1px solid rgba(176,216,255,.08); color:var(--mute-c); font-size:10px; }
+    .tag { font-size:10px; padding:1px 5px; border-radius:4px; background:rgba(93,211,255,.12); color:var(--accent-a); }
+    .tag-r { background:rgba(75,227,166,.12); color:var(--ok); }
+    .tag-used { background:rgba(255,169,77,.15); color:var(--warn); }
+    .size-btn { padding:6px 12px; border-radius:999px; border:1px solid var(--border); background:var(--card); color:var(--muted); cursor:pointer; font-size:13px; font-weight:700; transition:all 150ms; letter-spacing:.05em; }
+    .size-btn:hover { border-color:var(--accent-a); color:var(--accent-a); }
+    .lang-btn { padding:6px 12px; border-radius:999px; border:1px solid var(--border); background:var(--card); color:var(--muted); cursor:pointer; font-size:12px; font-weight:700; transition:all 150ms; }
+    .lang-btn:hover { border-color:var(--accent-a); color:var(--accent-a); }
+
+    /* Badges */
+    .b { display:inline-block; padding:2px 7px; border-radius:999px; font-size:11px; font-weight:700; }
+    .b-ok { background:rgba(75,227,166,.18); color:var(--ok); }
+    .b-warn { background:rgba(255,169,77,.18); color:var(--warn); }
+    .b-mute { background:rgba(107,140,174,.18); color:var(--mute-c); }
+    .b-blue { background:rgba(93,211,255,.18); color:var(--accent-a); }
+
+    /* Fallback chain */
+    .chain { display:flex; flex-wrap:wrap; gap:8px; padding:14px; }
+    .ch-item { display:flex; align-items:center; gap:5px; padding:5px 11px; border-radius:10px; border:1px solid var(--border); font-size:12px; background:rgba(10,23,39,.6); cursor:grab; user-select:none; transition:opacity 150ms,border-color 150ms; }
+    .ch-item:active { cursor:grabbing; }
+    .ch-item.primary { border-color:var(--accent-a); background:rgba(93,211,255,.12); color:var(--accent-a); font-weight:700; cursor:default; }
+    .ch-item.dragging { opacity:.35; }
+    .ch-item.drag-over { border-color:var(--ok); box-shadow:0 0 0 2px rgba(75,227,166,.35); }
+    .ch-idx { color:var(--muted); font-size:10px; margin-right:2px; }
+    .chain-save { padding:5px 14px; border-radius:999px; border:1px solid var(--ok); background:rgba(75,227,166,.12); color:var(--ok); cursor:pointer; font-size:12px; font-weight:700; transition:all 150ms; }
+    .chain-save:hover { background:rgba(75,227,166,.25); }
+    .chain-save:disabled { opacity:.4; cursor:not-allowed; }
+
+    code { font-family:monospace; font-size:12px; background:rgba(93,211,255,.1); padding:1px 5px; border-radius:4px; color:var(--accent-a); }
+    .empty { padding:16px; color:var(--muted); font-size:13px; }
+
+    @media(max-width:600px) { .layout{padding:16px 12px 32px;} .stats-grid{grid-template-columns:repeat(2,1fr);} .chart-label{min-width:100px;} }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <header class="hero">
+    <div>
+      <h1>📈 Models Manager</h1>
+      <p class="hero-sub">OpenClaw <span data-i18n="heroSub"></span> &middot; <span id="ts" data-i18n-ts></span></p>
+    </div>
+    <div class="hero-right">
+      <a class="btn btn-sec" href="/boss/">← Boss</a>
+      <button class="lang-btn" id="langBtn" onclick="cycleLang()">EN</button>
+      <button class="size-btn" id="sizeBtn" onclick="cycleSize()" title="切换文字大小">A</button>
+      <button class="btn" onclick="loadData()" data-i18n="btnRefresh"></button>
+    </div>
+  </header>
+
+  <!-- Summary stats -->
+  <div class="stats-grid">
+    <div class="stat-card"><div class="lbl">Providers</div><div class="val c-a" id="s-providers">-</div><div class="sub" data-i18n="statProvSub"></div></div>
+    <div class="stat-card"><div class="lbl">Models</div><div class="val c-a" id="s-models">-</div><div class="sub" data-i18n="statMdlSub"></div></div>
+    <div class="stat-card"><div class="lbl" data-i18n="statDayReqLbl"></div><div class="val" id="s-req-day">-</div><div class="sub" data-i18n="statDayReqSub"></div></div>
+    <div class="stat-card"><div class="lbl" data-i18n="statDayTokLbl"></div><div class="val" id="s-tok-day">-</div><div class="sub" data-i18n="statDayTokSub"></div></div>
+    <div class="stat-card"><div class="lbl" data-i18n="statMonTokLbl"></div><div class="val" id="s-tok-month">-</div><div class="sub" data-i18n="statMonTokSub"></div></div>
+    <div class="stat-card"><div class="lbl" data-i18n="statMonCostLbl"></div><div class="val" id="s-cost-month">-</div><div class="sub" data-i18n="statMonCostSub"></div></div>
+  </div>
+
+  <!-- Usage chart -->
+  <div class="section">
+    <div class="sec-hdr" onclick="toggleSec(this)">
+      <h2>📊 <span data-i18n="secChart"></span></h2>
+      <div class="range-tabs" onclick="event.stopPropagation()">
+        <button class="tab active" data-r="day" onclick="setRange('day')" data-i18n="rangeDay"></button>
+        <button class="tab" data-r="week" onclick="setRange('week')" data-i18n="rangeWeek"></button>
+        <button class="tab" data-r="month" onclick="setRange('month')" data-i18n="rangeMon"></button>
+      </div>
+      <span class="sec-toggle">▾</span>
+    </div>
+    <div class="sec-body"><div class="chart-inner" id="usageChart"><p class="empty" data-i18n="emptyUsage"></p></div></div>
+  </div>
+
+  <!-- Model catalog -->
+  <div class="section">
+    <div class="sec-hdr" onclick="toggleSec(this)">
+      <h2>🧠 <span data-i18n="secCatalog"></span></h2>
+      <span class="sec-toggle">▾</span>
+    </div>
+    <div class="sec-body">
+      <div class="cat-filters">
+        <input class="cat-search" id="catSearch" type="search" data-i18n-ph="searchPh" oninput="renderCatalog()">
+        <button class="ftag" id="fActive" onclick="toggleFilter('active')" data-i18n-title="filterActiveTip" data-i18n="filterActive"></button>
+        <button class="ftag" id="fError" onclick="toggleFilter('error')" data-i18n-title="filterErrTip">⚠️ <span data-i18n="filterErr"></span></button>
+        <button class="ftag" id="fReason" onclick="toggleFilter('reason')" data-i18n-title="filterReasonTip">🧠 <span data-i18n="filterReason"></span></button>
+        <button class="ftag" id="fVision" onclick="toggleFilter('vision')" data-i18n-title="filterVisionTip">👁️ <span data-i18n="filterVision"></span></button>
+        <span class="cat-count" id="catCount"></span>
+      </div>
+      <div class="cat-grid" id="catGrid"><p class="empty" data-i18n="loading"></p></div>
+    </div>
+  </div>
+
+  <!-- Agent fallback chain -->
+  <div class="section">
+    <div class="sec-hdr" onclick="toggleSec(this)">
+      <h2>⚡ <span data-i18n="secChain"></span></h2>
+      <button class="chain-save" id="chainSaveBtn" onclick="event.stopPropagation();saveFallbacks()" disabled data-i18n="chainSave"></button>
+      <span class="sec-toggle">▾</span>
+    </div>
+    <div class="sec-body">
+      <div style="padding:6px 14px 0;font-size:11px;color:var(--mute-c);" data-i18n="chainHint"></div>
+      <div class="chain" id="chainDiv"><p class="empty" data-i18n="loading"></p></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let dataCache = null;
+let currentRange = "day";
+
+// ─── i18n ─────────────────────────────────────────────────────────────────────
+const LANGS = {
+  zh: {
+    heroSub: "模型管理仪表盘",
+    btnRefresh: "刷新",
+    statProvSub: "已配置",
+    statMdlSub: "所有 provider",
+    statDayReqLbl: "今日请求",
+    statDayReqSub: "活跃模型数",
+    statDayTokLbl: "今日 Tokens",
+    statDayTokSub: "累计 tokens",
+    statMonTokLbl: "本月 Tokens",
+    statMonTokSub: "近 30 天",
+    statMonCostLbl: "费用估算",
+    statMonCostSub: "本月至今",
+    secChart: "使用统计",
+    rangeDay: "今日",
+    rangeWeek: "本周",
+    rangeMon: "本月",
+    emptyUsage: "暂无使用记录",
+    secCatalog: "模型目录",
+    searchPh: "搜索模型...",
+    filterActive: "活跃",
+    filterActiveTip: "仅显示有使用记录的模型",
+    filterErr: "报错",
+    filterErrTip: "仅显示最后一次调用为错误的模型",
+    filterReason: "推理",
+    filterReasonTip: "仅显示支持推理的模型",
+    filterVision: "视觉",
+    filterVisionTip: "仅显示支持图片输入的模型",
+    loading: "加载中...",
+    secChain: "回退链",
+    chainSave: "保存顺序",
+    chainHint: "拖拽调整回退模型的顺序，然后保存",
+    emptyCatalog: "暂无模型配置数据",
+    emptyFilter: "无匹配结果",
+    emptyChain: "暂无回退链配置",
+    noBaseUrl: "无 base url",
+    tagReason: "推理",
+    tagVision: "视觉",
+    tagActive: "活跃",
+    setPrimaryBtn: "设为默认",
+    setPrimaryDone: "✓ 默认模型",
+    lastCall: "调用",
+    lastSuccess: "成功",
+    lastSuccessLabel: "最后成功",
+    settingPrimary: "设置中…",
+    failed: "失败",
+    saving: "保存中…",
+    savedRestarting: "✓ 已保存，重启中…",
+    saveFailed: "保存失败",
+    refreshing: "刷新中...",
+    updated: "更新:",
+    loadFailed: "加载失败:",
+    seeDetail: "见明细",
+    relAgo: (s) => s < 60 ? `${s}s前` : s < 3600 ? `${Math.floor(s/60)}m前` : s < 86400 ? `${Math.floor(s/3600)}h前` : `${Math.floor(s/86400)}d前`,
+    provModelCount: (n) => `${n} 个模型`,
+    catCountFmt: (p, m) => `${p} 个 provider · ${m} 个模型`,
+  },
+  en: {
+    heroSub: "Model Management Dashboard",
+    btnRefresh: "Refresh",
+    statProvSub: "configured",
+    statMdlSub: "all providers",
+    statDayReqLbl: "Today Requests",
+    statDayReqSub: "active models",
+    statDayTokLbl: "Today Tokens",
+    statDayTokSub: "cumulative",
+    statMonTokLbl: "Monthly Tokens",
+    statMonTokSub: "last 30 days",
+    statMonCostLbl: "Cost Est.",
+    statMonCostSub: "this month",
+    secChart: "Usage Stats",
+    rangeDay: "Today",
+    rangeWeek: "Week",
+    rangeMon: "Month",
+    emptyUsage: "No usage data",
+    secCatalog: "Model Catalog",
+    searchPh: "Search models...",
+    filterActive: "Active",
+    filterActiveTip: "Show only used models",
+    filterErr: "Error",
+    filterErrTip: "Show models with last error",
+    filterReason: "Reasoning",
+    filterReasonTip: "Show reasoning models",
+    filterVision: "Vision",
+    filterVisionTip: "Show vision models",
+    loading: "Loading...",
+    secChain: "Fallback Chain",
+    chainSave: "Save Order",
+    chainHint: "Drag to reorder fallback models, then save",
+    emptyCatalog: "No model config data",
+    emptyFilter: "No results",
+    emptyChain: "No fallback chain configured",
+    noBaseUrl: "no base url",
+    tagReason: "Reasoning",
+    tagVision: "Vision",
+    tagActive: "Active",
+    setPrimaryBtn: "Set Default",
+    setPrimaryDone: "✓ Default",
+    lastCall: "Call",
+    lastSuccess: "OK",
+    lastSuccessLabel: "Last success",
+    settingPrimary: "Setting…",
+    failed: "Failed",
+    saving: "Saving…",
+    savedRestarting: "✓ Saved, restarting…",
+    saveFailed: "Save failed",
+    refreshing: "Refreshing...",
+    updated: "Updated:",
+    loadFailed: "Load failed:",
+    seeDetail: "see detail",
+    relAgo: (s) => s < 60 ? `${s}s ago` : s < 3600 ? `${Math.floor(s/60)}m ago` : s < 86400 ? `${Math.floor(s/3600)}h ago` : `${Math.floor(s/86400)}d ago`,
+    provModelCount: (n) => `${n} model${n === 1 ? "" : "s"}`,
+    catCountFmt: (p, m) => `${p} provider${p===1?'':'s'} · ${m} model${m===1?'':'s'}`,
+  }
+};
+
+let currentLang = localStorage.getItem("lang") || "zh";
+
+function t(key) { return (LANGS[currentLang] ?? LANGS.zh)[key] ?? key; }
+
+function applyLang() {
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    const v = t(el.dataset.i18n);
+    if (typeof v === "string") el.textContent = v;
+  });
+  document.querySelectorAll("[data-i18n-ph]").forEach(el => {
+    const v = t(el.dataset.i18nPh);
+    if (typeof v === "string") el.placeholder = v;
+  });
+  document.querySelectorAll("[data-i18n-title]").forEach(el => {
+    const v = t(el.dataset.i18nTitle);
+    if (typeof v === "string") el.title = v;
+  });
+  document.getElementById("langBtn").textContent = currentLang === "zh" ? "EN" : "中";
+  document.getElementById("sizeBtn").title = currentLang === "zh" ? "切换文字大小" : "Toggle text size";
+  if (dataCache) { renderUsage(); renderCatalog(); renderChain(); renderStats(); }
+}
+
+function cycleLang() {
+  currentLang = currentLang === "zh" ? "en" : "zh";
+  localStorage.setItem("lang", currentLang);
+  applyLang();
+}
+// ──────────────────────────────────────────────────────────────────────────────
+
+function fmtN(n) {
+  if (n == null) return "-";
+  if (n >= 1e9) return (n/1e9).toFixed(2)+"B";
+  if (n >= 1e6) return (n/1e6).toFixed(1)+"M";
+  if (n >= 1e3) return (n/1e3).toFixed(1)+"K";
+  return String(n);
+}
+function fmtCtx(n) {
+  if (!n) return null;
+  if (n >= 1e6) return (n/1e6).toFixed(0)+"M ctx";
+  if (n >= 1e3) return (n/1e3).toFixed(0)+"K ctx";
+  return n+"ctx";
+}
+function authB(m) {
+  const map = { api_key:["b-blue","API Key"], oauth:["b-ok","OAuth"], token:["b-warn","Token"], "not-configured":["b-mute","No Auth"] };
+  const [c, l] = map[m] || ["b-mute", m || "-"];
+  return `<span class="b ${c}">${l}</span>`;
+}
+function fmtRelTime(ts) {
+  if (!ts) return null;
+  const d = new Date(ts);
+  if (isNaN(d)) return null;
+  const s = Math.floor((Date.now() - d) / 1000);
+  return t("relAgo")(s);
+}
+function stopReasonB(r) {
+  if (!r) return "";
+  if (r === "endTurn" || r === "stop") return `<span class="b b-ok" style="font-size:10px;padding:1px 5px;">${r}</span>`;
+  if (r === "toolUse") return `<span class="b b-blue" style="font-size:10px;padding:1px 5px;">toolUse</span>`;
+  if (r === "error" || r === "max_tokens") return `<span class="b" style="font-size:10px;padding:1px 5px;background:rgba(255,107,107,.18);color:#ff6b6b;">${r}</span>`;
+  return `<span class="b b-mute" style="font-size:10px;padding:1px 5px;">${r}</span>`;
+}
+function toggleSec(h) {
+  const b = h.nextElementSibling, tg = h.querySelector(".sec-toggle");
+  const col = b.style.display === "none";
+  b.style.display = col ? "" : "none";
+  tg.classList.toggle("col", !col);
+}
+function setRange(r) {
+  currentRange = r;
+  document.querySelectorAll(".tab").forEach(tb => tb.classList.toggle("active", tb.dataset.r === r));
+  renderUsage();
+}
+
+function buildUsageMap(range) {
+  const m = new Map();
+  const models = dataCache?.ranges?.[range]?.models ?? [];
+  for (const u of models) m.set(u.key, u);
+  return m;
+}
+
+function renderUsage() {
+  const models = dataCache?.ranges?.[currentRange]?.models ?? [];
+  const chart = document.getElementById("usageChart");
+  if (!models.length) { chart.innerHTML = `<p class="empty">${t("emptyUsage")}</p>`; return; }
+  const maxTok = models[0]?.totalTokens || 1;
+  chart.innerHTML = models.slice(0, 30).map(m => {
+    const pct = Math.min(100, (m.totalTokens / maxTok) * 100);
+    const label = `${m.provider} / ${m.model}`;
+    return `<div class="chart-row">
+      <div class="chart-label" title="${label}">${label}</div>
+      <div class="chart-bar"><div class="chart-fill" style="width:${pct}%"></div></div>
+      <div class="chart-val">${fmtN(m.totalTokens)} tokens &middot; in:${fmtN(m.input)} out:${fmtN(m.output)}</div>
+    </div>`;
+  }).join("");
+}
+
+const filters = { active: false, error: false, reason: false, vision: false };
+const filterBtnId = { active:'fActive', error:'fError', reason:'fReason', vision:'fVision' };
+function toggleFilter(key) {
+  filters[key] = !filters[key];
+  const btn = document.getElementById(filterBtnId[key]);
+  btn.classList.toggle('on', filters[key]);
+  if (key === 'active') btn.classList.toggle('on-g', filters[key]);
+  renderCatalog();
+}
+
+function renderCatalog() {
+  const catalog = dataCache?.catalog;
+  if (!catalog) { document.getElementById("catGrid").innerHTML = `<p class="empty">${t("emptyCatalog")}</p>`; return; }
+  const usageMap = buildUsageMap("month");
+  const aliases = catalog.agentDefaults?.aliases ?? {};
+  const primaryModel = catalog.agentDefaults?.primaryModel ?? "";
+  const q = (document.getElementById("catSearch")?.value || "").toLowerCase().trim();
+
+  const provLastCall = (prov) => {
+    let latest = "";
+    for (const m of prov.models ?? []) {
+      const u = usageMap.get(`${prov.name}::${m.id}`);
+      if (u?.lastCallTime && u.lastCallTime > latest) latest = u.lastCallTime;
+    }
+    return latest;
+  };
+  const sortedProviders = [...(catalog.providers ?? [])].sort((a, b) => {
+    const ta = provLastCall(a), tb = provLastCall(b);
+    if (tb > ta) return 1; if (ta > tb) return -1; return a.name.localeCompare(b.name);
+  });
+
+  let totalProvs = 0, totalModels = 0;
+  const html = sortedProviders.map(prov => {
+    const provMatch = !q || prov.name.toLowerCase().includes(q);
+    const baseShort = (prov.baseUrl || "").replace(/^https?:\/\//, "").split("/")[0];
+    const mdls = [...(prov.models ?? [])].sort((a, b) => {
+      const ua = usageMap.get(`${prov.name}::${a.id}`), ub = usageMap.get(`${prov.name}::${b.id}`);
+      const ta = ua?.lastCallTime || "", tb = ub?.lastCallTime || "";
+      return tb > ta ? 1 : ta > tb ? -1 : 0;
+    }).filter(m => {
+      const key = `${prov.name}::${m.id}`;
+      const usageInfo = usageMap.get(key);
+      if (filters.active && !usageInfo) return false;
+      if (filters.error && (!usageInfo || !["error","max_tokens"].includes(usageInfo.lastCallStopReason))) return false;
+      if (filters.reason && !m.reasoning) return false;
+      if (filters.vision && !(m.input || []).includes("image")) return false;
+      if (q && !provMatch) {
+        const label = (aliases[`${prov.name}/${m.id}`] || m.name || m.id || "").toLowerCase();
+        if (!label.includes(q) && !m.id.toLowerCase().includes(q)) return false;
+      }
+      return true;
+    }).map(m => {
+      const key = `${prov.name}::${m.id}`;
+      const alias = aliases[`${prov.name}/${m.id}`];
+      const usageInfo = usageMap.get(key);
+      const tags = [];
+      if (m.reasoning) tags.push(`<span class="tag tag-r">🧠 ${t("tagReason")}</span>`);
+      if ((m.input || []).includes("image")) tags.push(`<span class="tag">👁️ ${t("tagVision")}</span>`);
+      const ctx = fmtCtx(m.contextWindow);
+      if (ctx) tags.push(`<span class="tag">${ctx}</span>`);
+      if (usageInfo) tags.push(`<span class="tag tag-used">${t("tagActive")}</span>`);
+      const relTime = usageInfo ? fmtRelTime(usageInfo.lastCallTime) : null;
+      const relSuccTime = usageInfo ? fmtRelTime(usageInfo.lastSuccessTime) : null;
+      const showSuccRow = relSuccTime && usageInfo.lastSuccessTime !== usageInfo.lastCallTime;
+      const lcHtml = relTime ? `<div class="mdl-last-call" title="${usageInfo.lastCallTime || ""}">
+          <span style="color:var(--mute-c);min-width:3.5em;">${t("lastCall")}</span><span>🕐 ${relTime}</span>${stopReasonB(usageInfo.lastCallStopReason)}
+        </div>${showSuccRow ? `<div class="mdl-last-call" title="${usageInfo.lastSuccessTime || ""}">
+          <span style="color:var(--mute-c);min-width:3.5em;">${t("lastSuccess")}</span><span>✅ ${relSuccTime}</span>${stopReasonB(usageInfo.lastSuccessStopReason)}
+        </div>` : ""}` : "";
+      const modelKey = `${prov.name}/${m.id}`;
+      const isPrimary = primaryModel === modelKey;
+      if (isPrimary) tags.unshift('<span class="tag tag-primary">⭐ PRIMARY</span>');
+      const okDot = relSuccTime ? `<span class="mdl-ok-dot" title="${t("lastSuccessLabel")}: ${usageInfo.lastSuccessTime || ''}"></span>` : "";
+      const primaryBtn = isPrimary
+        ? `<button class="mdl-set-primary" disabled>${t("setPrimaryDone")}</button>`
+        : `<button class="mdl-set-primary" onclick="setPrimary('${modelKey}',this)">${t("setPrimaryBtn")}</button>`;
+      return `<li class="mdl-item${isPrimary ? ' is-primary' : ''}">
+        ${okDot}${primaryBtn}<div class="mdl-item-top"><span class="mdl-id" title="${m.id}">${alias || m.name || m.id}</span><span class="mdl-tags">${tags.join("")}</span></div>${lcHtml}
+      </li>`;
+    }).join("");
+    if (!mdls) return "";
+    totalProvs++; totalModels += mdls.split('<li class="mdl-item">').length - 1;
+    return `<div class="prov-card">
+      <div class="prov-hdr"><span class="prov-name">${prov.name}</span>${authB(prov.authMode)}</div>
+      <div class="prov-meta" title="${prov.baseUrl}">${baseShort || t("noBaseUrl")}</div>
+      <div style="margin-bottom:8px;font-size:12px;color:var(--muted);">${t("provModelCount")(prov.models?.length ?? 0)} &middot; <code style="font-size:11px;">${prov.api || "unknown"}</code></div>
+      <ul class="mdl-list">${mdls}</ul>
+    </div>`;
+  }).join("");
+  document.getElementById("catGrid").innerHTML = html || `<p class="empty">${t("emptyFilter")}</p>`;
+  const hasFilter = q || filters.active || filters.error || filters.reason || filters.vision;
+  document.getElementById("catCount").textContent = hasFilter ? t("catCountFmt")(totalProvs, totalModels) : "";
+}
+
+let dragSrc = null;
+
+function renderChain() {
+  const ad = dataCache?.catalog?.agentDefaults;
+  const div = document.getElementById("chainDiv");
+  if (!ad) { div.innerHTML = `<p class="empty">${t("emptyChain")}</p>`; return; }
+
+  div.innerHTML = "";
+  if (ad.primaryModel) {
+    const el = document.createElement("div");
+    el.className = "ch-item primary";
+    el.innerHTML = `<span style="font-size:10px;opacity:.7;margin-right:4px;">PRIMARY</span>${ad.primaryModel}`;
+    div.appendChild(el);
+  }
+  (ad.fallbacks ?? []).forEach((f, i) => {
+    const el = document.createElement("div");
+    el.className = "ch-item";
+    el.draggable = true;
+    el.dataset.model = f;
+    el.innerHTML = `<span class="ch-idx">${i+1}</span>${f}`;
+    el.addEventListener("dragstart", e => { dragSrc = el; el.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; });
+    el.addEventListener("dragend", () => { dragSrc = null; document.querySelectorAll(".ch-item").forEach(x => x.classList.remove("dragging","drag-over")); });
+    el.addEventListener("dragover", e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; if (el !== dragSrc) el.classList.add("drag-over"); });
+    el.addEventListener("dragleave", () => el.classList.remove("drag-over"));
+    el.addEventListener("drop", e => {
+      e.preventDefault();
+      el.classList.remove("drag-over");
+      if (!dragSrc || dragSrc === el) return;
+      const items = [...div.querySelectorAll(".ch-item[draggable]")];
+      const fromIdx = items.indexOf(dragSrc), toIdx = items.indexOf(el);
+      if (fromIdx < toIdx) el.after(dragSrc); else el.before(dragSrc);
+      reindexChain();
+      document.getElementById("chainSaveBtn").disabled = false;
+    });
+    div.appendChild(el);
+  });
+}
+
+function reindexChain() {
+  document.querySelectorAll("#chainDiv .ch-item[draggable]").forEach((el, i) => {
+    el.querySelector(".ch-idx").textContent = i + 1;
+  });
+}
+
+async function setPrimary(modelKey, btn) {
+  const orig = btn.textContent;
+  btn.disabled = true; btn.textContent = t("settingPrimary");
+  try {
+    const r = await fetch("/models-api/api/set-primary", {
+      method: "POST", headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ primary: modelKey })
+    });
+    const d = await r.json();
+    if (d.ok) {
+      if (dataCache?.catalog?.agentDefaults) dataCache.catalog.agentDefaults.primaryModel = modelKey;
+      renderCatalog();
+      renderChain();
+    } else { btn.textContent = t("failed"); btn.disabled = false; setTimeout(() => { btn.textContent = orig; }, 2000); }
+  } catch(e) { btn.textContent = t("failed"); btn.disabled = false; setTimeout(() => { btn.textContent = orig; }, 2000); }
+}
+
+async function saveFallbacks() {
+  const btn = document.getElementById("chainSaveBtn");
+  const items = [...document.querySelectorAll("#chainDiv .ch-item[draggable]")];
+  const fallbacks = items.map(el => el.dataset.model);
+  btn.disabled = true; btn.textContent = t("saving");
+  try {
+    const r = await fetch("/models-api/api/save-fallbacks", {
+      method: "POST", headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ fallbacks })
+    });
+    const d = await r.json();
+    if (d.ok) { btn.textContent = t("savedRestarting"); setTimeout(() => { btn.textContent = t("chainSave"); }, 3000); }
+    else { btn.textContent = t("saveFailed"); btn.disabled = false; }
+  } catch(e) { btn.textContent = t("saveFailed"); btn.disabled = false; }
+}
+
+function renderStats() {
+  if (!dataCache) return;
+  const cat = dataCache.catalog;
+  const provCount = cat?.providers?.length ?? 0;
+  const modelCount = (cat?.providers ?? []).reduce((s, p) => s + (p.models?.length ?? 0), 0);
+  document.getElementById("s-providers").textContent = provCount;
+  document.getElementById("s-models").textContent = modelCount;
+
+  const dayMdls = dataCache.ranges?.day?.models ?? [];
+  const monthMdls = dataCache.ranges?.month?.models ?? [];
+  const sumTok = (arr) => arr.reduce((s, m) => s + (m.totalTokens ?? 0), 0);
+  document.getElementById("s-req-day").textContent = fmtN(dayMdls.length);
+  document.getElementById("s-tok-day").textContent = fmtN(sumTok(dayMdls));
+  document.getElementById("s-tok-month").textContent = fmtN(sumTok(monthMdls));
+  document.getElementById("s-cost-month").textContent = monthMdls.length ? t("seeDetail") : "-";
+}
+
+const SIZES = ["sm", "md", "lg"];
+const SIZE_LABEL = { sm: "A", md: "A+", lg: "A++" };
+let currentSize = localStorage.getItem("page-size") || "sm";
+function applySize() {
+  document.body.dataset.size = currentSize === "sm" ? "" : currentSize;
+  document.getElementById("sizeBtn").textContent = SIZE_LABEL[currentSize];
+}
+function cycleSize() {
+  currentSize = SIZES[(SIZES.indexOf(currentSize) + 1) % SIZES.length];
+  localStorage.setItem("page-size", currentSize);
+  applySize();
+}
+applySize();
+
+async function loadData() {
+  document.getElementById("ts").textContent = t("refreshing");
+  try {
+    const resp = await fetch("/models-usage/data.json", { cache: "no-store" });
+    dataCache = await resp.json();
+    const locale = currentLang === "zh" ? "zh-CN" : "en-US";
+    const upd = dataCache.updatedAt ? new Date(dataCache.updatedAt).toLocaleString(locale) : "-";
+    document.getElementById("ts").textContent = t("updated") + " " + upd;
+    renderStats();
+    renderUsage();
+    renderCatalog();
+    renderChain();
+  } catch(e) {
+    document.getElementById("ts").textContent = t("loadFailed") + " " + e.message;
+  }
+}
+
+// Init
+applyLang();
+loadData();
+</script>
+</body>
+</html>

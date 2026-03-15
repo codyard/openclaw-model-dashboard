@@ -2,10 +2,12 @@ import fs from "node:fs";
 import path from "node:path";
 import readline from "node:readline";
 
-const sessionsDir = "/home/shrek/.openclaw/agents/main/sessions";
-const openclawConfigPath = "/home/shrek/.openclaw/openclaw.json";
-const outputPath = "/var/www/html/models-usage/data.json";
-const tmpPath = "/home/shrek/.openclaw/workspace/tmp/models-usage-data.json";
+const HOME = process.env.HOME || process.env.USERPROFILE;
+const OPENCLAW_DIR = process.env.OPENCLAW_DIR || path.join(HOME, ".openclaw");
+const sessionsDir = path.join(OPENCLAW_DIR, "agents/main/sessions");
+const openclawConfigPath = path.join(OPENCLAW_DIR, "openclaw.json");
+const outputPath = process.env.MODELS_OUTPUT_PATH || "/var/www/html/models-usage/data.json";
+const tmpPath = path.join(OPENCLAW_DIR, "workspace/tmp/models-usage-data.json");
 
 const now = new Date();
 const dayStart = new Date(now); dayStart.setHours(0,0,0,0);

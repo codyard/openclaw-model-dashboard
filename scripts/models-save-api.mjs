@@ -4,7 +4,10 @@ import http from "node:http";
 import fs from "node:fs";
 import { execFile } from "node:child_process";
 
-const OPENCLAW_CONFIG = "/home/shrek/.openclaw/openclaw.json";
+import path from "node:path";
+const HOME = process.env.HOME || process.env.USERPROFILE;
+const OPENCLAW_DIR = process.env.OPENCLAW_DIR || path.join(HOME, ".openclaw");
+const OPENCLAW_CONFIG = process.env.OPENCLAW_CONFIG || path.join(OPENCLAW_DIR, "openclaw.json");
 const PORT = 8789;
 
 const readJson = (p) => JSON.parse(fs.readFileSync(p, "utf-8"));

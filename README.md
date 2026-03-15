@@ -2,7 +2,7 @@
 
 A lightweight static dashboard for monitoring AI model usage, managing providers, and configuring fallback chains in OpenClaw gateway.
 
-![Dashboard Preview](https://pic1.zhimg.com/80/v2-74854dc0dd0ac097b62cbd2fb8fc7a71_1440w.webp)
+![Dashboard Preview](screenshot.png)
 
 ## Features
 
@@ -32,13 +32,13 @@ scripts/models-save-api.mjs  (port 8789, systemd user service)
 
 ## Files
 
-| Path | Description |
-|------|-------------|
-| `index.html` | Single-file SPA dashboard (HTML + CSS + JS, no build step) |
-| `scripts/models-usage-export.mjs` | Data export script — run via cron |
-| `scripts/models-save-api.mjs` | Lightweight HTTP save API |
-| `scripts/deploy-models-manager.sh` | Deploy script |
-| `systemd/models-save-api.service` | systemd user service for the save API |
+| Path                               | Description                                                |
+| ---------------------------------- | ---------------------------------------------------------- |
+| `index.html`                       | Single-file SPA dashboard (HTML + CSS + JS, no build step) |
+| `scripts/models-usage-export.mjs`  | Data export script — run via cron                          |
+| `scripts/models-save-api.mjs`      | Lightweight HTTP save API                                  |
+| `scripts/deploy-models-manager.sh` | Deploy script                                              |
+| `systemd/models-save-api.service`  | systemd user service for the save API                      |
 
 ## Setup
 

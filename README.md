@@ -2,6 +2,8 @@
 
 A lightweight static dashboard for monitoring AI model usage, managing providers, and configuring fallback chains in OpenClaw gateway.
 
+![Dashboard Preview](https://pic1.zhimg.com/80/v2-74854dc0dd0ac097b62cbd2fb8fc7a71_1440w.webp)
+
 ## Features
 
 - **Usage Stats** — token consumption per model across day / week / month, visualized as bar charts

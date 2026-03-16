@@ -32,6 +32,34 @@ function setupNginx() {
         process.exit(1);
     }
 
+function installSkill() {
+    // 自动安装 Node.js 依赖
+    try {
+        console.log('Installing Node.js dependencies...');
+        execSync('npm install', { stdio: 'inherit' });
+        console.log('Node.js dependencies installed.');
+    } catch (e) {
+        console.error('npm install failed. Please check your environment.');
+        process.exit(1);
+    }
+
+    // 检查 nginx 是否安装
+    let nginxInstalled = false;
+    try {
+        execSync('nginx -v', { stdio: 'ignore' });
+        nginxInstalled = true;
+        console.log('nginx is installed. Proceeding to configure /models-manager virtual directory...');
+    } catch (e) {
+        console.warn('nginx is not installed. Please install nginx for web access.');
+    }
+
+    if (nginxInstalled) {
+        setupNginx();
+        console.log('Skill installation complete. Web access is ready at /models-manager.');
+    } else {
+        console.log('Skill installation complete. Web access is NOT ready. Please install nginx and rerun install.');
+    }
+}
     // 生成 nginx 配置内容
     const projectDir = process.cwd();
     const confPath = "/etc/nginx/conf.d/models-manager.conf";
@@ -75,6 +103,9 @@ switch (cmd) {
     case "setup-nginx":
         setupNginx();
         break;
+        case "install":
+            installSkill();
+            break;
     case "help":
     case undefined:
         printHelp();

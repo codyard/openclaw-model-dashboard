@@ -1,45 +1,53 @@
 # openclaw-model-dashboard Skill
 
-## 简介
+## Introduction
 
-openclaw-model-dashboard 是为 openclaw 体系设计的模型管理与用量导出 skill，支持模型用量导出与模型保存 API 服务。
+openclaw-model-dashboard is a skill designed for the openclaw ecosystem, supporting model management, usage export, and model save API service.
 
-## 功能点
 
-- 导出模型用量（export-usage）
-- 启动模型保存 API 服务（save-api）
-- 自动配置 nginx 虚拟目录（setup-nginx）
+## Features
 
-## 使用方法
+- Install skill and dependencies (`install`)
+- Export model usage (`export-usage`)
+- Start model save API service (`save-api`)
+- Automatically configure nginx virtual directory (`setup-nginx`)
 
-### 命令行
+## Usage
+
+
+### Command Line
 
 ```sh
-node index.js export-usage   # 导出模型用量
-node index.js save-api       # 启动模型保存API服务
-node index.js setup-nginx    # 自动配置 nginx 虚拟目录 /models-manager
+node index.js install        # Install skill dependencies and check nginx
+node index.js export-usage   # Export model usage
+node index.js save-api       # Start model save API service
+node index.js setup-nginx    # Automatically configure nginx virtual directory /models-manager
 ```
 
-### openclaw agent 调用
+
+### openclaw agent invocation
 
 ```sh
+openclaw agent run-skill openclaw-model-dashboard install
 openclaw agent run-skill openclaw-model-dashboard export-usage
 openclaw agent run-skill openclaw-model-dashboard save-api
 openclaw agent run-skill openclaw-model-dashboard setup-nginx
 ```
 
-## 参数说明
 
-- export-usage：无参数，直接导出模型用量
-- save-api：无参数，直接启动 API 服务
-- setup-nginx：无参数，自动检测 nginx 并生成 /models-manager 虚拟目录配置，需有写入 /etc/nginx/conf.d/ 和 reload nginx 权限（建议 sudo）
+## Parameters
 
-## 依赖
+- install: No parameters, automatically installs Node.js dependencies and checks nginx
+- export-usage: No parameters, directly exports model usage
+- save-api: No parameters, directly starts the API service
+- setup-nginx: No parameters, automatically detects nginx and generates /models-manager virtual directory config. Requires permission to write to /etc/nginx/conf.d/ and reload nginx (sudo recommended)
+
+## Dependencies
 
 - Node.js 18+
-- scripts/ 目录下的 .mjs 脚本
-- 系统需安装 nginx
+- .mjs scripts in the scripts/ directory
+- nginx must be installed on the system
 
-## 维护者
+## Maintainer
 
-- 刚
+- Gang
